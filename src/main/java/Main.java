@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -20,18 +17,25 @@ public class Main {
             serverSocket.setReuseAddress(true);
             clientSocket = serverSocket.accept(); // Wait for connection from client.
             System.out.println("accepted new connection");
-            readData(clientSocket);
+            readRequest(clientSocket);
+            writeResponse(clientSocket);
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
         }
     }
 
-    public static void readData(Socket clientSocket) throws IOException {
+    public static void readRequest(Socket clientSocket) throws IOException {
         InputStream input = clientSocket.getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            System.out.println(line);
-        }
+        String line = reader.readLine();
+        System.out.println(line);
+    }
+
+    //HTTP/1.1 200 OK\r\n\r\n
+    public static void writeResponse(Socket clientSocket) throws IOException {
+        OutputStream outputStream = clientSocket.getOutputStream();
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
+        writer.write("HTTP/1.1 200 OK\r\n\r\n");
+        writer.flush();
     }
 }
