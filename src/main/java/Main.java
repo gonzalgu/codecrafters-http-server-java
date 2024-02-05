@@ -32,12 +32,21 @@ public class Main {
     private static void processRequest(Message message, Socket socket) throws IOException {
         OutputStream outputStream = socket.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
-        if(message.path.equals("/")){
-            writer.write("HTTP/1.1 200 OK\r\n\r\n");
+        if(message.path.startsWith("/echo/")){
+            var extractedString = message.path.substring(6);
+            var response = createResponse(extractedString);
+            writer.write(response);
         }else{
             writer.write("HTTP/1.1 404 Not Found\r\n\r\n");
         }
         writer.flush();
+    }
+
+    private static String createResponse(String extractedString) {
+        var response = String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n%s\r\n",
+                extractedString.length(),
+                extractedString);
+        return response;
     }
 
     public static Message readRequest(Socket clientSocket) throws IOException {
