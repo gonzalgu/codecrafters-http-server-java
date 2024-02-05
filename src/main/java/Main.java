@@ -21,7 +21,8 @@ public class Main {
         }
     }
 
-    public record Message(String method, String path, String httpVersion){}
+    public record Message(String method, String path, String httpVersion) {
+    }
 
     public static Message parseMessage(BufferedReader reader) throws IOException {
         String startLine = reader.readLine();
@@ -32,14 +33,22 @@ public class Main {
     private static void processRequest(Message message, Socket socket) throws IOException {
         OutputStream outputStream = socket.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
-        if(message.path.startsWith("/echo/")){
-            var extractedString = message.path.substring(6);
-            var response = createResponse(extractedString);
+        if (message.path.equals("/") || message.path.startsWith("/echo/")) {
+            var path = extractPath(message.path);
+            var response = createResponse(path);
             writer.write(response);
-        }else{
+        } else {
             writer.write("HTTP/1.1 404 Not Found\r\n\r\n");
         }
         writer.flush();
+    }
+
+    private static String extractPath(String path) {
+        if (path.startsWith("/echo/")) {
+            return path.substring(6);
+        } else {
+            return "";
+        }
     }
 
     private static String createResponse(String extractedString) {
