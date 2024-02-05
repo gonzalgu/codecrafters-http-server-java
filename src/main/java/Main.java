@@ -6,9 +6,6 @@ public class Main {
     public static void main(String[] args) {
         // You can use print statements as follows for debugging, they'll be visible when running tests.
         System.out.println("Logs from your program will appear here!");
-
-        // Uncomment this block to pass the first stage
-        //
         ServerSocket serverSocket = null;
         Socket clientSocket = null;
 
@@ -17,25 +14,38 @@ public class Main {
             serverSocket.setReuseAddress(true);
             clientSocket = serverSocket.accept(); // Wait for connection from client.
             System.out.println("accepted new connection");
-            readRequest(clientSocket);
-            writeResponse(clientSocket);
+            var request = readRequest(clientSocket);
+            processRequest(request, clientSocket);
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
         }
     }
 
-    public static void readRequest(Socket clientSocket) throws IOException {
-        InputStream input = clientSocket.getInputStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-        String line = reader.readLine();
-        System.out.println(line);
+    public record Message(String method, String path, String httpVersion){}
+
+    public static Message parseMessage(BufferedReader reader) throws IOException {
+        String startLine = reader.readLine();
+        var splitLine = startLine.split(" ");
+        return new Message(splitLine[0].trim(), splitLine[1].trim(), splitLine[2].trim());
     }
 
-    //HTTP/1.1 200 OK\r\n\r\n
-    public static void writeResponse(Socket clientSocket) throws IOException {
-        OutputStream outputStream = clientSocket.getOutputStream();
+    private static void processRequest(Message message, Socket socket) throws IOException {
+        OutputStream outputStream = socket.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
-        writer.write("HTTP/1.1 200 OK\r\n\r\n");
+        if(message.path.equals("/")){
+            writer.write("HTTP/1.1 200 OK\r\n\r\n");
+        }else{
+            writer.write("HTTP/1.1 404 Not Found\r\n\r\n");
+        }
         writer.flush();
+    }
+
+    public static Message readRequest(Socket clientSocket) throws IOException {
+        InputStream input = clientSocket.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+        var message = parseMessage(reader);
+        String header1 = reader.readLine();
+        String header2 = reader.readLine();
+        return message;
     }
 }
