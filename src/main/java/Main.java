@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -21,21 +23,54 @@ public class Main {
         }
     }
 
-    public record Message(String method, String path, String httpVersion) {
+    public record Request(
+            String method,
+            String path,
+            String httpVersion,
+            String host,
+            String userAgent
+    ) {
     }
 
-    public static Message parseMessage(BufferedReader reader) throws IOException {
-        String startLine = reader.readLine();
-        var splitLine = startLine.split(" ");
-        return new Message(splitLine[0].trim(), splitLine[1].trim(), splitLine[2].trim());
+    public static Request parseRequest(BufferedReader reader) throws IOException {
+        String line = reader.readLine();
+        //firstLine
+        var splitLine = line.split(" ");
+
+        // Prepare to read headers
+        Map<String, String> headers = new HashMap<>();
+        for(int i=0;i<2; ++i){
+            line = reader.readLine();
+            int separator = line.indexOf(":");
+            if (separator == -1) {
+                continue; // Not a valid header line; ignore it
+            }
+            String headerName = line.substring(0, separator).trim();
+            String headerValue = line.substring(separator + 1).trim();
+            headers.put(headerName, headerValue);
+        }
+
+        String method, path, httpVersion;
+        method = splitLine[0].trim();
+        path = splitLine[1].trim();
+        httpVersion = splitLine[2].trim();
+
+        return new Request(
+                method, path, httpVersion,
+                headers.get("Host"),
+                headers.get("User-Agent")
+        );
     }
 
-    private static void processRequest(Message message, Socket socket) throws IOException {
+    private static void processRequest(Request message, Socket socket) throws IOException {
         OutputStream outputStream = socket.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
         if (message.path.equals("/") || message.path.startsWith("/echo/")) {
             var path = extractPath(message.path);
             var response = createResponse(path);
+            writer.write(response);
+        } else if (message.path.startsWith("/user-agent")) {
+            var response = createResponse(message.userAgent);
             writer.write(response);
         } else {
             writer.write("HTTP/1.1 404 Not Found\r\n\r\n");
@@ -58,10 +93,10 @@ public class Main {
         return response;
     }
 
-    public static Message readRequest(Socket clientSocket) throws IOException {
+    public static Request readRequest(Socket clientSocket) throws IOException {
         InputStream input = clientSocket.getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-        var message = parseMessage(reader);
+        var message = parseRequest(reader);
         String header1 = reader.readLine();
         String header2 = reader.readLine();
         return message;
