@@ -52,7 +52,7 @@ public class Main {
     }
 
     private static String createResponse(String extractedString) {
-        var response = String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n%s\r\n",
+        var response = String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s\r\n",
                 extractedString.length(),
                 extractedString);
         return response;
