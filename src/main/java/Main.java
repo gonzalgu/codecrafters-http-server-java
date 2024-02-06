@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
         // You can use print statements as follows for debugging, they'll be visible when running tests.
         System.out.println("Logs from your program will appear here!");
-        ExecutorService executorService = Executors.newFixedThreadPool(4);
+        ExecutorService executorService = Executors.newFixedThreadPool(20);
         try(ServerSocket serverSocket = new ServerSocket(4221)) {
             while(true){
                 serverSocket.setReuseAddress(true);
