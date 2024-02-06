@@ -3,23 +3,43 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Main {
     public static void main(String[] args) {
         // You can use print statements as follows for debugging, they'll be visible when running tests.
         System.out.println("Logs from your program will appear here!");
-        ServerSocket serverSocket = null;
-        Socket clientSocket = null;
+        ExecutorService executorService = Executors.newFixedThreadPool(4);
+        try(ServerSocket serverSocket = new ServerSocket(4221)) {
+            while(true){
+                serverSocket.setReuseAddress(true);
+                Socket clientSocket = serverSocket.accept(); // Wait for connection from client.
+                System.out.println("accepted new connection");
+                executorService.submit(() -> {
+                    try {
+                        handleRequests(clientSocket);
+                    } catch (IOException e) {
+                        System.out.println("error processing request: " + e);
+                        System.out.println("not accepting requests anymore.");
+                        try {
+                            clientSocket.close();
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                });
+            }
 
-        try {
-            serverSocket = new ServerSocket(4221);
-            serverSocket.setReuseAddress(true);
-            clientSocket = serverSocket.accept(); // Wait for connection from client.
-            System.out.println("accepted new connection");
-            var request = readRequest(clientSocket);
-            processRequest(request, clientSocket);
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
+        }
+    }
+
+    private static void handleRequests(Socket clientSocket) throws IOException {
+        while(true){
+            var request = readRequest(clientSocket);
+            processRequest(request, clientSocket);
         }
     }
 
