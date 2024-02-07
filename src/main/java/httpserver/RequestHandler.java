@@ -41,7 +41,7 @@ public class RequestHandler {
                 "OK",
                 Map.of(
                     "Content-Type", "application/octet-stream",
-                        "Content-Size", String.valueOf(size)
+                        "Content-Length", String.valueOf(size)
                 ),
                 ""
         );

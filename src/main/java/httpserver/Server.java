@@ -64,7 +64,7 @@ public class Server {
         writer.write(serialized);
         if(response.getFilePath() != null){
             try (FileInputStream fileInputStream = new FileInputStream(response.getFilePath().toFile())) {
-                var contentSize = Integer.parseInt(response.getHeaders().get("Content-Size"));
+                var contentSize = Integer.parseInt(response.getHeaders().get("Content-Length"));
                 for(int i=0;i<contentSize; ++i){
                     writer.write(fileInputStream.read());
                 }
