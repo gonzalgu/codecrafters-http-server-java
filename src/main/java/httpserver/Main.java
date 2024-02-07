@@ -52,17 +52,9 @@ public class Main {
         var serialized = ReponseSerializer.serialize(response);
         OutputStream outputStream = socket.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
+        System.out.printf("request-received: %s\nresponse-sent: %s\n", message, response);
         writer.write(serialized);
         writer.flush();
-        System.out.printf("request-received: %s\nresponse-sent: %s\n", message, response);
-    }
-
-
-    private static String createResponse(String extractedString) {
-        var response = String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s\r\n",
-                extractedString.length(),
-                extractedString);
-        return response;
     }
 
     public static Request readRequest(Socket clientSocket) throws IOException {

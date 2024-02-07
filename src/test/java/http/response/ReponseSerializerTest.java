@@ -1,3 +1,5 @@
+package http.response;
+
 import http.response.ReponseSerializer;
 import http.response.Response;
 import org.junit.jupiter.api.Test;
