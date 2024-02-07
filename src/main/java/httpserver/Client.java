@@ -11,32 +11,24 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class Client {
-    private static String host;
-    private static int port;
+    private String host;
+    private int port;
 
-    private static SocketChannel client;
-    private static ByteBuffer buffer;
+    private SocketChannel client;
+    private ByteBuffer buffer;
 
-    private static Client instance;
 
-    public static Client start(String host, int port) {
-        if (instance == null) {
-            instance = new Client(host, port);
-        }
-        return instance;
+    public void stop() throws IOException {
+        this.client.close();
+        this.buffer = null;
     }
 
-    public static void stop() throws IOException {
-        client.close();
-        buffer = null;
-    }
-
-    private Client(String host, int port) {
-        Client.host = host;
-        Client.port = port;
+    public Client(String host, int port) {
+        this.host = host;
+        this.port = port;
         try {
-            client = SocketChannel.open(new InetSocketAddress(host, port));
-            buffer = ByteBuffer.allocate(1024);
+            this.client = SocketChannel.open(new InetSocketAddress(host, port));
+            this.buffer = ByteBuffer.allocate(1024);
         } catch (IOException e) {
             e.printStackTrace();
         }
