@@ -1,5 +1,6 @@
 package http.response;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 public class Response {
@@ -10,6 +11,8 @@ public class Response {
     //Headers
     Map<String, String> headers;
     String body;
+
+    Path filePath;
 
     public Response(String protocolVersion, int statusCode, String statusText, Map<String, String> headers, String body) {
         this.protocolVersion = protocolVersion;
@@ -37,6 +40,15 @@ public class Response {
 
     public String getBody() {
         return body;
+    }
+
+
+    public Path getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(Path filePath) {
+        this.filePath = filePath;
     }
 
     @Override

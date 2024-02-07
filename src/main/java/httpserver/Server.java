@@ -7,16 +7,21 @@ import http.response.ReponseSerializer;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 
 public class Server {
     String host;
     int port;
+    String directory;
 
     public Server(String host, int port) {
         this.host = host;
         this.port = port;
     }
 
+    public void setDirectory(String directory) {
+        this.directory = directory;
+    }
 
     public void start() throws IOException {
         ServerSocket serverSocket = new ServerSocket(4221);
@@ -43,24 +48,32 @@ public class Server {
         }
     }
 
-    private static void handleRequests(Socket clientSocket) throws IOException {
+    private void handleRequests(Socket clientSocket) throws IOException {
         var request = readRequest(clientSocket);
         if (request != null) {
             processRequest(request, clientSocket);
         }
     }
 
-    private static void processRequest(Request message, Socket socket) throws IOException {
-        var response = RequestHandler.handleRequest(message);
+    private void processRequest(Request message, Socket socket) throws IOException {
+        var response = RequestHandler.handleRequest(message, this.directory);
         var serialized = ReponseSerializer.serialize(response);
         OutputStream outputStream = socket.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
         System.out.printf("request-received: %s\nresponse-sent: %s\n", message, response);
         writer.write(serialized);
+        if(response.getFilePath() != null){
+            try (FileInputStream fileInputStream = new FileInputStream(response.getFilePath().toFile())) {
+                var contentSize = Integer.parseInt(response.getHeaders().get("Content-Size"));
+                for(int i=0;i<contentSize; ++i){
+                    writer.write(fileInputStream.read());
+                }
+            }
+        }
         writer.flush();
     }
 
-    public static Request readRequest(Socket clientSocket) throws IOException {
+    public Request readRequest(Socket clientSocket) throws IOException {
         InputStream in = clientSocket.getInputStream();
         StringBuilder stringBuilder = new StringBuilder();
         byte[] buffer = new byte[1024];
@@ -74,20 +87,6 @@ public class Server {
         }
 
         var data = stringBuilder.toString();
-        System.out.println(data);
-        /*
-        InputStream input = clientSocket.getInputStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-        var lines = new ArrayList<String>();
-        while(reader.ready()){
-            String line = reader.readLine();
-            if(line == null){
-                break;
-            }
-            lines.add(line);
-        }
-        String requestData = String.join("\r\n", lines);
-         */
         return RequestParser.parse(data);
     }
 }

@@ -14,6 +14,8 @@ class ClientTest {
         String host = "localhost";
         int port = 4221;
         Server server = new Server(host, port);
+        server.setDirectory("src/test/java/files");
+
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.submit(() -> {
             try {
@@ -37,7 +39,7 @@ class ClientTest {
                 client2
         );
         sendRequestToClient(
-                new Request("GET", "/echo/papa/bye", "HTTP/1.1", Map.of(), ""),
+                new Request("GET", "/files/testFile.txt", "HTTP/1.1", Map.of(), ""),
                 client3
         );
         client1.stop();

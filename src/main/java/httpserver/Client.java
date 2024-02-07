@@ -39,10 +39,11 @@ public class Client {
         buffer = ByteBuffer.wrap(serialized.getBytes());
         client.write(buffer);
         buffer.clear();
-        client.read(buffer);
+        int bytesRead = client.read(buffer);
         String responseData = new String(buffer.array()).trim();
+        System.out.printf("client: bytes-read: %d\n", bytesRead);
+        System.out.printf("client: response-received: %s\n", responseData);
         var response = ResponseParser.parse(responseData);
-        System.out.printf("response-received: %s\n", response);
         buffer.flip();
         return response;
     }
