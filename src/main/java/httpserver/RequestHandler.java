@@ -3,13 +3,24 @@ package httpserver;
 import http.request.Request;
 import http.response.Response;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
 public class RequestHandler {
+
     public static Response handleRequest(Request request, String directory) throws IOException {
+        return switch (request.getMethod()) {
+            case "GET" -> handleGet(request, directory);
+            case "POST" -> handlePost(request, directory);
+            default -> null;
+        };
+    }
+
+
+    public static Response handleGet(Request request, String directory) throws IOException {
         var uri = request.getUri();
         Response response;
         if (uri.equals("/") || uri.startsWith("/echo/")) {
@@ -31,6 +42,34 @@ public class RequestHandler {
             response = NotFound();
         }
         return response;
+    }
+
+    public static Response handlePost(Request request, String directory) throws IOException {
+        var uri = request.getUri();
+        if(uri.startsWith("/files/")){
+            var filePath = Path.of(directory, Path.of(uri).getFileName().toString());
+            if(!Files.exists(filePath)){
+                Files.createFile(filePath);
+            }
+            var contentLength = Integer.parseInt(request.getHeaders().get("Content-Length"));
+            try (var fileOutputStream = new FileOutputStream(filePath.toFile())) {
+                var bodyBytes = request.getBody().getBytes();
+                for(int i=0;i<contentLength; ++i){
+                    fileOutputStream.write(bodyBytes[i]);
+                }
+                fileOutputStream.flush();
+            }
+            return new Response(
+                    "HTTP/1.1",
+                    201,
+                    "Created",
+                    Map.of(),
+                    ""
+                    );
+        }else{
+            //return error
+            return NotFound();
+        }
     }
 
     private static Response okWithFileContents(Path pathFile) throws IOException {

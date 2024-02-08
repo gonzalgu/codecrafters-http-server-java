@@ -5,10 +5,14 @@ import http.request.RequestSerializer;
 import http.response.Response;
 import http.response.ResponseParser;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Path;
+import java.util.Map;
 
 public class Client {
     private String host;
@@ -46,6 +50,28 @@ public class Client {
         var response = ResponseParser.parse(responseData);
         buffer.flip();
         return response;
+    }
+
+    public Response postFile(Path filePath){
+        try (FileInputStream fileInputStream = new FileInputStream(String.valueOf(filePath))) {
+            var fileContents = fileInputStream.readAllBytes();
+            var request = new Request(
+                    "POST",
+                    "/files/testFile.txt",
+                    "HTTP/1.1",
+                    Map.of(
+                            "Content-Length", String.valueOf(fileContents.length),
+                            "Content-Type", "application/octet-stream"
+                            ),
+                    new String(fileContents)
+            );
+            return sendRequest(request);
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

@@ -7,7 +7,6 @@ import http.response.ReponseSerializer;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
 
 public class Server {
     String host;
@@ -24,27 +23,28 @@ public class Server {
     }
 
     public void start() throws IOException {
-        ServerSocket serverSocket = new ServerSocket(4221);
-        int clientId = 0;
-        while (true) {
-            serverSocket.setReuseAddress(true);
-            Socket clientSocket = serverSocket.accept(); // Wait for connection from client.
-            System.out.println("client accepted.");
-            new Thread(() -> {
-                try {
-                    handleRequests(clientSocket);
-                } catch (IOException e) {
-                    System.out.println("error processing request: " + e);
-                    System.out.println("not accepting requests anymore.");
-                } finally {
+        try (ServerSocket serverSocket = new ServerSocket(4221)) {
+            int clientId = 0;
+            while (true) {
+                serverSocket.setReuseAddress(true);
+                Socket clientSocket = serverSocket.accept(); // Wait for connection from client.
+                System.out.println("client accepted.");
+                new Thread(() -> {
                     try {
-                        clientSocket.close();
-                        System.out.println("connection closed.");
+                        handleRequests(clientSocket);
                     } catch (IOException e) {
-                        System.out.printf("error closing socket: %s\n", e.getMessage());
+                        System.out.println("error processing request: " + e);
+                        System.out.println("not accepting requests anymore.");
+                    } finally {
+                        try {
+                            clientSocket.close();
+                            System.out.println("connection closed.");
+                        } catch (IOException e) {
+                            System.out.printf("error closing socket: %s\n", e.getMessage());
+                        }
                     }
-                }
-            }).start();
+                }).start();
+            }
         }
     }
 
@@ -56,7 +56,7 @@ public class Server {
     }
 
     private void processRequest(Request message, Socket socket) throws IOException {
-        var response = RequestHandler.handleRequest(message, this.directory);
+        var response = RequestHandler.handleGet(message, this.directory);
         var serialized = ReponseSerializer.serialize(response);
         OutputStream outputStream = socket.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
