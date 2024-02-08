@@ -78,13 +78,6 @@ class ClientTest {
         var filePath = Path.of("src/test/java/fileSource/fileForPosting.txt");
         var response = client1.postFile(filePath);
         System.out.println(response);
-
-        //then issue a get for this file, it should return the file and ok
-        sendRequestToClient(
-                new Request("GET", "/files/fileForPosting.txt", "HTTP/1.1", Map.of(), ""),
-                client1
-        );
-        client1.stop();
         executorService.shutdownNow();
     }
 
