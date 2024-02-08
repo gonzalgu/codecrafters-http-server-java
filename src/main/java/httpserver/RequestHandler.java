@@ -51,11 +51,11 @@ public class RequestHandler {
             if(!Files.exists(filePath)){
                 Files.createFile(filePath);
             }
-            var contentLength = Integer.parseInt(request.getHeaders().get("Content-Length"));
+            //var contentLength = Integer.parseInt(request.getHeaders().get("Content-Length"));
             try (var fileOutputStream = new FileOutputStream(filePath.toFile())) {
                 var bodyBytes = request.getBody().getBytes();
-                for(int i=0;i<contentLength; ++i){
-                    fileOutputStream.write(bodyBytes[i]);
+                for(byte b : bodyBytes){
+                    fileOutputStream.write(b);
                 }
                 fileOutputStream.flush();
             }

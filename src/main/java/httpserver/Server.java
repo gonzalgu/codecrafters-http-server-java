@@ -56,7 +56,7 @@ public class Server {
     }
 
     private void processRequest(Request message, Socket socket) throws IOException {
-        var response = RequestHandler.handleGet(message, this.directory);
+        var response = RequestHandler.handleRequest(message, this.directory);
         var serialized = ReponseSerializer.serialize(response);
         OutputStream outputStream = socket.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
